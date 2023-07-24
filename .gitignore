@@ -1,0 +1,17 @@
+*.pt
+*.out
+*.h5
+*.csv
+*.pdf
+*.dat
+*.pyc
+*.png
+saved_models/**
+trajectories/**
+data/**
+*.mat
+__pycache__
+archive/**
+todelete/**
+SLURM/**
+deepxdeplayground.code-workspace
