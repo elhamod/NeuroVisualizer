@@ -16,3 +16,4 @@ todelete/**
 SLURM/**
 deepxdeplayground.code-workspace
 .vscode/**
+*.zip
