@@ -27,11 +27,11 @@ everynth=1
 
 
 # DNN_type=NN
-# modelPath="/home/elhamod/projects/cophy/models/NN_landscapes_-0x76bf66285ad523a5/states"
+# modelPath="/home/elhamod/projects/cophy/models/NN_landscapes/states"
 # wheretosave=NN_every$everynth
 
 DNN_type=PGNN_ 
-modelPath="/home/elhamod/projects/cophy/models/Cophy2_landscapes_0x210e9fb80c01304c/states"
+modelPath="/home/elhamod/projects/cophy/models/CoPhy_landscapes/states"
 wheretosave=CoPhy_every$everynth
 
 

@@ -28,7 +28,7 @@ everynth=1
 
 
 # DNN_type=NN
-# modelPath="/home/elhamod/projects/cophy/models/NN_landscapes_-0x76bf66285ad523a5/states"
+# modelPath="/home/elhamod/projects/cophy/models/NN_landscapes/states"
 # wheretosave=NN_every$everynth
 
 DNN_type=PGNN_ 

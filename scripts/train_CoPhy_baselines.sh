@@ -18,7 +18,7 @@ cd /home/elhamod/projects/deepxdeplayground/AE/
 
 prefix="--prefix state_"
 everynth=1
-modelPath="/home/elhamod/projects/cophy/models/Cophy2_landscapes_0x210e9fb80c01304c/states"
+modelPath="/home/elhamod/projects/cophy/models/CoPhy_landscapes/states"
 wheretosave=CoPhy_baselines
 DNN_type="PGNN_"
 dataPath="/home/elhamod/projects/deepxdeplayground/AE/CoPhyData/"
