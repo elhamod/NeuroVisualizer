@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
 
     ##PIDGAN stuff##### #NOTE: replace these for a different mode type
-    Convectionpath ='/home/elhamod/projects/deepxdeplayground/AE/Convection'
+    Convectionpath ='/home/elhamod/projects/AE/Convection'
     if os.path.exists(Convectionpath) and Convectionpath not in sys.path:
             sys.path.insert(0, Convectionpath)
     from loadNewModel import get_PINN
