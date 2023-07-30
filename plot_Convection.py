@@ -4,7 +4,7 @@ import json
 import pandas as pd
 import torch 
 from AEmodel import UniformAutoencoder
-from trajectories_data import get_trajectory_dataloader, get_trajectory_dataset
+from trajectories_data import get_trajectory_dataloader
 import sys
 import os
 import numpy as np
@@ -74,7 +74,7 @@ if __name__ == '__main__':
 
 
     ##PIDGAN stuff##### #NOTE: replace these for a different mode type
-    Convectionpath ='/home/elhamod/projects/AE/Convection'
+    Convectionpath ='../Convection'
     if os.path.exists(Convectionpath) and Convectionpath not in sys.path:
             sys.path.insert(0, Convectionpath)
     from loadNewModel import get_PINN

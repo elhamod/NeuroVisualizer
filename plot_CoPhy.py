@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
 
     ##Cophy stuff##### #NOTE: replace these for a different mode type
-    Convectionpath ='/home/elhamod/projects/cophy/'
+    Convectionpath ='../CoPhy/'
     if os.path.exists(Convectionpath) and Convectionpath not in sys.path:
             sys.path.insert(0, Convectionpath)
     from DNN import get_DNN

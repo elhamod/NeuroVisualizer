@@ -245,7 +245,7 @@ def get_files(file_path, num_models=None, prefix="", from_last=False, every_nth=
     directory = os.path.join(file_path)
     files=get_all_files(directory)
     print(files)
-    pt_files = [os.path.join(directory, file) for file in files if file.endswith(".pt")]
+    pt_files = [file for file in files if file.endswith(".pt")]
     print(len(pt_files), 'files included.')
     if num_models is not None:
         pt_files = pt_files[:num_models] if not from_last else pt_files[-num_models:]
