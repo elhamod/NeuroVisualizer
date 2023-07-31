@@ -16,9 +16,9 @@ source activate landscapesvisenv
 train="yes" #"yes" "no"
 resume= #"--resume"
 num_of_layers=3
-epochs=80000
+epochs=80000 #TODO: reinstate for all
 models_path=../trajectories/MTL_same_initialization/Beta30/CW
-wheretosave=Convection_anchor1_traj
+wheretosave=Convection_anchor1_traj #TODO: reinstate for all
 
 
 #training

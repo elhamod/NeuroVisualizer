@@ -3,19 +3,24 @@ import csv
 import json
 import pandas as pd
 import torch 
-from AEmodel import UniformAutoencoder
-from trajectories_data import get_trajectory_dataloader
-import sys
+import numpy as np
 import os
 import numpy as np
-from utils import get_density, get_files, repopulate_model
+import matplotlib.ticker as ticker
+from matplotlib.colors import LogNorm, NoNorm
+import matplotlib.pyplot as plt
 
-from PINN_failures_data_aux import PhysicsInformedNN_pbc_helper
+from aux.AEmodel import UniformAutoencoder
+from aux.trajectories_data import get_trajectory_dataloader
+from aux.utils import get_density, get_files, repopulate_model
+from aux.PINN_failures_data_aux import PhysicsInformedNN_pbc_helper
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Krishnapriyan et. al. plotting')
     
-    #PINNsFail
+    #params from Krishnapriyan et. al. 
     parser.add_argument('--beta', type=float, default=1.0)
     parser.add_argument('--L', type=float, default=1.0)
 
@@ -203,11 +208,6 @@ if __name__ == '__main__':
 
 
     ######### Plotting
-
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import matplotlib.ticker as ticker
-    from matplotlib.colors import LogNorm, NoNorm
     levels = np.logspace(np.log10(vmin), np.log10(vmax), int(args.vlevel))
 
 

@@ -3,13 +3,18 @@ import csv
 import json
 import pandas as pd
 import torch 
-from AEmodel import UniformAutoencoder
-from trajectories_data import get_trajectory_dataloader
-import sys
 import os
 import numpy as np
-from utils import get_density, get_files, repopulate_model
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import LogNorm
+import matplotlib.ticker as ticker
 
+from aux.utils import get_density, get_files, repopulate_model
+from aux.AEmodel import UniformAutoencoder
+from aux.trajectories_data import get_trajectory_dataloader
+from CoPhy.DNN import get_DNN
+from CoPhy.lossCalculator import Loss
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CoPhy plotting')
@@ -69,14 +74,6 @@ if __name__ == '__main__':
     loss_type = args.whichloss
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-    ##Cophy stuff##### #NOTE: replace these for a different mode type
-    Convectionpath ='../CoPhy/'
-    if os.path.exists(Convectionpath) and Convectionpath not in sys.path:
-            sys.path.insert(0, Convectionpath)
-    from DNN import get_DNN
-    from lossCalculator import Loss
 
 
     ############ HYPERP #####
@@ -218,11 +215,6 @@ if __name__ == '__main__':
 
 
     ######### Plotting
-
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from matplotlib.colors import LogNorm
-    import matplotlib.ticker as ticker
     levels = np.logspace(np.log10(vmin), np.log10(vmax), int(args.vlevel))
 
 

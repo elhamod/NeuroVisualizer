@@ -3,16 +3,15 @@ import torch
 import os
 import numpy as np
 import csv
-
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.preprocessing import normalize
-from torch.utils.data import TensorDataset, DataLoader, Dataset
-
-from trajectories_data import get_trajectory_dataset
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from torch.utils.data import TensorDataset, DataLoader, Dataset
+
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import normalize
+from aux.trajectories_data import get_trajectory_dataset
+
 
 #### plotting
 def plot_losses(df, every_epoch, file_path):
@@ -56,125 +55,6 @@ def plot_losses(df, every_epoch, file_path):
 
     plt.close()
     plt.close(fig)
-
-
-####### stats stuff #####
-
-def print_stats(data_loader, filepath, postfix=""):#, unnormalize=False):
-    min_val = float('inf')
-    max_val = float('-inf')
-    sum_val = 0
-    sum_squared_val = 0
-    count = 0
-
-    for batch in data_loader:
-        data = batch.float()
-        min_val = min(min_val, torch.min(data))
-        max_val = max(max_val, torch.max(data))
-        sum_val += torch.sum(data)
-        sum_squared_val += torch.sum(data ** 2)
-        count += data.numel()
-
-    mean_val = sum_val / count
-    std_val = torch.sqrt((sum_squared_val / count) - (mean_val ** 2))
-
-    print(f"Minimum value: {min_val}")
-    print(f"Maximum value: {max_val}")
-    print(f"Mean value: {mean_val}")
-    print(f"Standard deviation: {std_val}")
-
-    data = {
-        'Minimum value': [min_val.item()],
-        'Maximum value': [max_val.item()],
-        'Mean value': [mean_val.item()],
-        'Standard deviation': [std_val.item()]}
-    # Create pandas DataFrame from dictionary
-    df = pd.DataFrame(data)
-    df.to_csv(os.path.join(filepath, 'dataset_stats'+postfix+'.csv'), quoting=csv.QUOTE_NONNUMERIC)
-
-def print_coordinates(data_loader2, best_model, predefined_values, device, best_model_path_directory):
-    df = pd.DataFrame(columns=['filename', 'x', 'y', 'x_true', 'y_true'])
-
-    best_model.eval()
-    dataset = data_loader2.dataset.dataset #NOTE: because we use a subset
-    with torch.no_grad():
-        for batch_idx, data in enumerate(dataset):
-            data = data.to(device)
-
-            # Get the model predictions
-            _, z = best_model(data)
-
-            # Calculate the errors
-            print('z,z_true = ', z, predefined_values[batch_idx])
-
-            z_list = z.tolist()
-            predefined_values_list = predefined_values.tolist()
-            print(z_list, predefined_values_list)
-            df = df.append({'filename': os.path.basename(dataset.file_paths[batch_idx]), 'x': z_list[0], 'y': z_list[1], 'x_true': predefined_values_list[batch_idx][0], 'y_true': predefined_values_list[batch_idx][1]}, ignore_index=True)
-
-        df.to_csv(os.path.join(best_model_path_directory, 'coordinates.csv'), quoting=csv.QUOTE_NONNUMERIC, index=False)
-
-def print_errors(data_loader, best_model, device, best_model_path_directory, df, epoch, err_tolerance=0.01, unnormalize=True):
-    errors = []
-    best_model.eval()
-    with torch.no_grad():
-        for inputs in data_loader:
-            inputs = inputs.to(device)
-
-            # Get the model predictions
-            x_recon, z = best_model(inputs)
-
-            if unnormalize:
-                t = data_loader.dataset.transform
-                x_recon = x_recon*t.std.to(device) + t.mean.to(device)
-                inputs = inputs*t.std.to(device) + t.mean.to(device)
-
-            # Calculate the errors
-            error = (x_recon - inputs).pow(2).sum(dim=1).sqrt().view(-1, 1)
-            errors.append(error)
-
-        errors_tensor = torch.cat(errors, dim=0)
-        min_error = torch.min(errors_tensor).item()
-        max_error = torch.max(errors_tensor).item()
-        mean_error = torch.mean(errors_tensor).item()
-        std_error = torch.std(errors_tensor).item()
-
-
-        # Set the range to check
-        range_min = -err_tolerance
-        range_max = err_tolerance
-
-        # Create a boolean mask for the values within the range
-        mask = torch.logical_and(errors_tensor >= range_min, errors_tensor <= range_max)
-
-        # Calculate the proportion of values within the range
-        prob_in_range = torch.mean(mask.float()).item()
-
-        # save the array to a CSV file
-        file_prefix=os.path.join(best_model_path_directory,'errors'+('_unnormalized' if unnormalize else ''))
-        # open file for writing
-        print(f"Minimum error: {min_error}")
-        print(f"Maximum error: {max_error}")
-        print(f"Mean error: {mean_error}")
-        print(f"Standard deviation of error: {std_error}")
-        print(f"Probability that a value is in the range [{range_min}, {range_max}]: {prob_in_range:.2f}")
-
-        data = {
-            'epoch': epoch,
-            'Minimum error': min_error,
-            'Maximum error': max_error,
-            'Mean error': mean_error,
-            'Standard deviation of error': std_error,
-            f'Probability that a value is in the range [{range_min}, {range_max}]': prob_in_range}
-        # Create pandas DataFrame from dictionary
-        if df is None:
-            df = pd.DataFrame(data, index=['epoch'])
-        else:
-            df = df.append(data, ignore_index=True)
-        df.to_csv(file_prefix +'.csv', quoting=csv.QUOTE_NONNUMERIC)
-
-        return df
-
 
 
 ####### Model stuff ####
@@ -328,7 +208,7 @@ def loss_well_spaced_trajectory(coords):
     pairwise_dists = torch.cdist(coords, coords)
 
     # Compute condition tensor
-    condition_next = (pairwise_dists < next_dists)#.all(dim=0)
+    condition_next = (pairwise_dists < next_dists)
     condition_prev = (pairwise_dists < prev_dists)
 
     where_closer_next = torch.where(condition_next, next_dists - pairwise_dists, torch.tensor([0.0]).to(next_dists))

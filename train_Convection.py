@@ -3,16 +3,18 @@ import json
 import pandas as pd
 import torch
 import os
+import itertools
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
 import warnings
 warnings.filterwarnings("ignore", message="The frame.append method is deprecated")
 
 
-from AEmodel import UniformAutoencoder
-from earlystopping import EarlyStopping
-from losses import rec_loss_function, loss_anchor
-from trajectories_data import get_trajectory_dataloader, get_anchor_dataloader, get_predefined_values
-from utils import get_files, get_gridpoint_and_trajectory_datasets, loss_well_spaced_trajectory, plot_losses, print_coordinates, print_errors, print_stats
+from aux.AEmodel import UniformAutoencoder
+from aux.earlystopping import EarlyStopping
+from aux.losses import loss_consecutive_coordinates, loss_grid_to_trajectory, rec_loss_function, loss_anchor
+from aux.trajectories_data import get_trajectory_dataloader, get_anchor_dataloader, get_predefined_values
+from aux.utils import get_files, get_gridpoint_and_trajectory_datasets, loss_well_spaced_trajectory, plot_losses
 
 
 
@@ -48,7 +50,6 @@ if __name__ == '__main__':
     parser.add_argument('--grid_ratio', default=None, type=float, help='grid rati of input to latent')
     parser.add_argument('--latentfactor', default=2, type=float, help='latentfactor') 
     parser.add_argument('--anchor_mode', default="diagonal", type=str, help='anchor shape') #"circle"#"diagonal"
-    parser.add_argument('--grid_mode', default="proportional", type=str, help='grid mode') #"proportional"#"scaled"
 
     #weigths
     parser.add_argument('--rec_weight', default=1.0, type=float)
@@ -56,7 +57,6 @@ if __name__ == '__main__':
     parser.add_argument('--lastzero_weight', default=0.0, type=float)
     parser.add_argument('--polars_weight', default=0.0, type=float)
     parser.add_argument('--equidistant_weight', default=0.0, type=float)
-    parser.add_argument('--wellspacedtrajectory_weight', default=0.0, type=float)
     parser.add_argument('--gridscaling_weight', default=0.0, type=float)
 
     parser.add_argument('--resume', dest='resume', action='store_true')
@@ -82,28 +82,28 @@ if __name__ == '__main__':
 
     loss_dict = {
         'rec': {
-            'weight': args.rec_weight, #10.0,  # Adjust the weight of the uniform loss term
+            'weight': args.rec_weight,
             'official_name': "Reconstruction loss"
         },
         'anchor': {
-            'weight': args.anchor_weight, #1.0,
+            'weight': args.anchor_weight,
             'official_name': "Anchor loss"
         },
         'lastzero': {
-            'weight': args.lastzero_weight, #100.0,
+            'weight': args.lastzero_weight,
             'official_name': "LastZero loss"
         },
         'polars': {
-            'weight': args.polars_weight, #100.0,
+            'weight': args.polars_weight,
             'official_name': "Polar loss"
         },
         'gridscaling': {
-            'weight': args.gridscaling_weight, #1.0,
+            'weight': args.gridscaling_weight,
             'official_name': "Grid-scaling loss"
         },
-        'wellspacedtrajectory': {
-            'weight': args.wellspacedtrajectory_weight, #1.0,
-            'official_name': "Well-spaced-trajectory loss"
+        'equidistant': {
+            'weight': args.equidistant_weight,
+            'official_name': "Equi-distant loss"
         },
     }
     isEnabled = lambda loss: loss_dict[loss]['weight'] > 0
@@ -139,14 +139,6 @@ if __name__ == '__main__':
     print('number of models considered: ', len(dataset))
 
 
-    #stats
-    print('normalzied model data')
-    print_stats(rec_data_loader, best_model_path_directory)
-    print('unnormalzied  model data')
-    data_loader_unnormalized, _ = get_trajectory_dataloader(pt_files, args.batch_size, best_model_path_directory, normalize=False)
-    print_stats(data_loader_unnormalized, best_model_path_directory, 'unnormalized') 
-
-
     if isEnabled('anchor'):
         anchor_dataloader = get_anchor_dataloader(dataset, range_of_files_for_anchor)
         loss_dict['anchor']['dataloader'] = anchor_dataloader
@@ -157,7 +149,8 @@ if __name__ == '__main__':
         loss_dict['lastzero']['dataloader'] =  get_anchor_dataloader(dataset)
     if isEnabled('polars'):
         loss_dict['polars']['dataloader'] =  get_anchor_dataloader(dataset)
-
+    if isEnabled('equidistant'):
+        loss_dict['equidistant']['dataloader'] =  get_trajectory_dataloader(pt_files, len(pt_files), best_model_path_directory, shuffle=False)
     d_max_inputspace=None
     if isEnabled('gridscaling'):
         loss_dict['gridscaling']['dataloader'] = get_gridpoint_and_trajectory_datasets(pt_files, best_model_path_directory, args.grid_step, batch_size=args.batch_size)
@@ -166,26 +159,18 @@ if __name__ == '__main__':
         data_trajectory_dataset_temp_last = data_trajectory_dataset_temp[-1][1]
         d_max_inputspace = torch.sqrt((data_trajectory_dataset_temp_0 - data_trajectory_dataset_temp_last).pow(2).sum(dim=-1)).to(device)
 
-    if isEnabled('wellspacedtrajectory'):
-        loss_dict['wellspacedtrajectory']['dataloader'], _ = get_trajectory_dataloader(pt_files, len(pt_files), best_model_path_directory, shuffle=False)
-
-
     ###### CODE
 
 
     model = UniformAutoencoder(input_dim, args.num_of_layers, latent_dim, h=args.layers_AE).to(device)
-    # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     optimizer = torch.optim.RMSprop(model.parameters(), lr=args.learning_rate)
-    # optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=0.9) #Bad
-    from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, ReduceLROnPlateau
     scheduler = CosineAnnealingWarmRestarts(optimizer, args.cosine_Scheduler_patience)
-    # scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.3, patience=cosine_Scheduler_patience, verbose=True) #NOTE: This is betteer. No actually not
 
     #### Training
 
     # Training
 
-    import itertools
+    
 
     def cycle_dataloader(dataloader):
         """Returns an infinite iterator for a dataloader."""
@@ -230,8 +215,6 @@ if __name__ == '__main__':
     columns.append('Total loss')
     columns.append('Learning rate')
     df_losses = pd.DataFrame(columns=columns)
-    df_errors = None
-    df_errors_unnormalized = None
     
     for epoch in range(args.epochs):
         # print('ho', epoch)
@@ -279,16 +262,16 @@ if __name__ == '__main__':
                     loss_zero2 = torch.nn.functional.mse_loss(10*first_coordinate, 10*-0.8*torch.ones_like(first_coordinate))
                     losses['polars'] = loss_zero + loss_zero2
 
-                if isEnabled('wellspacedtrajectory'):
-                    x_recon, z = model(data['wellspacedtrajectory'].to(device))
-                    losses['wellspacedtrajectory'] = loss_well_spaced_trajectory(z)
+                if isEnabled('equidistant'):
+                    x_recon, z = model(data['equidistant'].to(device))
+                    losses['equidistant'] = loss_consecutive_coordinates(z)
                 
                 if isEnabled('gridscaling'):
                     data_grid_latent, data_trajectory = data['gridscaling']
                     data_grid_latent = data_grid_latent[0] # because of TesnorDataset
                     data_grid_latent = data_grid_latent.to(device)
                     data_trajectory = data_trajectory.to(device)
-                    losses['gridscaling'] = loss_grid_to_trajectory(model, data_grid_latent, data_trajectory, d_max_inputspace, args.grid_mode, args.grid_ratio, epoch=epoch, latentfactor=args.latentfactor)
+                    losses['gridscaling'] = loss_grid_to_trajectory(model, data_grid_latent, data_trajectory, d_max_inputspace, args.grid_ratio, epoch=epoch, latentfactor=args.latentfactor)
 
                 loss_total_batch = 0
                 for i in losses:
@@ -310,8 +293,6 @@ if __name__ == '__main__':
             total_losses[i] = total_losses[i]/max_batches     
         total_loss = total_loss/max_batches
 
-        # scheduler.step(total_loss)
-
 
         row = {'epoch': epoch}
         for i in loss_dict.keys():
@@ -324,12 +305,6 @@ if __name__ == '__main__':
 
         if epoch%args.every_epoch == 0:
             earlystopping.on_epoch_end(epoch, total_loss, model)
-
-            print('normalzied model data')
-            df_errors = print_errors(rec_data_loader, model, device, best_model_path_directory, df=df_errors, epoch=epoch, err_tolerance=0.01, unnormalize=False)
-            print('unnormalzied model data')
-            df_errors_unnormalized = print_errors(rec_data_loader, model, device, best_model_path_directory, df=df_errors_unnormalized, epoch=epoch, err_tolerance=1, unnormalize=True)
-            print('------')
 
             printed_string = f"Epoch: {epoch}\t"
             for i in loss_dict:
@@ -346,16 +321,4 @@ if __name__ == '__main__':
             plot_losses(df_losses[filtered_columns], args.every_epoch, best_model_path_directory)
 
     best_model = earlystopping.on_train_end()
-
-
-    # Test error
-    # print('normalzied model data')
-    # print_errors(rec_data_loader, best_model, device, best_model_path_directory, df=df_errors, epoch=epoch, err_tolerance=0.01, unnormalize=False)
-    # print('unnormalzied model data')
-    # print_errors(rec_data_loader, best_model, device, best_model_path_directory, df=df_errors_unnormalized, epoch=epoch, err_tolerance=1, unnormalize=True)
-
-    if isEnabled('anchor'):
-        print_coordinates(loss_dict['anchor']['dataloader'], best_model, predefined_values, device, best_model_path_directory)
-
-    # print_summary(dataset, best_model, device, best_model_path_directory)
 

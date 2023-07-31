@@ -3,12 +3,19 @@ import csv
 import json
 import pandas as pd
 import torch 
-from AEmodel import UniformAutoencoder
-from trajectories_data import get_trajectory_dataloader
-import sys
 import os
 import numpy as np
-from utils import get_density, get_files, repopulate_model
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.ticker as ticker
+from matplotlib.colors import LogNorm, NoNorm
+
+from aux.AEmodel import UniformAutoencoder
+from aux.trajectories_data import get_trajectory_dataloader
+from aux.utils import get_density, get_files, repopulate_model
+from Convection.loadNewModel import get_PINN
+from Convection.losses import Loss
+
 
 
 if __name__ == '__main__':
@@ -71,16 +78,6 @@ if __name__ == '__main__':
     args.layers = [int(item) for item in args.layers.split(',')]
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-    ##PIDGAN stuff##### #NOTE: replace these for a different mode type
-    Convectionpath ='../Convection'
-    if os.path.exists(Convectionpath) and Convectionpath not in sys.path:
-            sys.path.insert(0, Convectionpath)
-    from loadNewModel import get_PINN
-    # from dataloader import getPGNNdata
-    from losses import Loss
-
 
     ############ HYPERP #####
 
@@ -228,11 +225,6 @@ if __name__ == '__main__':
 
 
     ######### Plotting
-
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import matplotlib.ticker as ticker
-    from matplotlib.colors import BoundaryNorm, LogNorm, NoNorm
     levels = np.logspace(np.log10(vmin), np.log10(vmax), int(args.vlevel))
 
     plots_ = ['loss', 'relative_error', 'abs_error', 'dists_param_space']

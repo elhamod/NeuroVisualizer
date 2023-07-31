@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils import get_closest_point_and_distance
+from aux.utils import get_closest_point_and_distance
 
 ####### LOSSES ###########
 
@@ -18,7 +18,7 @@ def loss_anchor(z, predefined_values):
 
 
 def loss_consecutive_coordinates(coordinates):
-    distances = (10*coordinates[1:] - 10*coordinates[:-1]).pow(2).sum(-1) # torch.norm dim=1
+    distances = (10*coordinates[1:] - 10*coordinates[:-1]).pow(2).sum(-1)
     max_ = torch.tensor(2*torch.pi*10*0.8/(coordinates.shape[0])).to(distances).pow(2)
     return nn.functional.mse_loss(distances, max_, reduction='sum')
 
@@ -62,23 +62,17 @@ def loss_grid_to_trajectory(model, data_grid_latent, data_trajectory, d_max_inpu
 
     d_latentspace =  torch.sqrt((factor*data_grid_latent- factor*closest_trajectory_latent_points).pow(2).sum(dim=-1))
 
-    if mode=="scaled":
-        scaling = get_scaling_input_to_latent(d_inputspace, d_latentspace)
-        loss = torch.nn.functional.mse_loss(d_inputspace, scaling*d_latentspace)
-    elif mode=="proportional":
-        log_dist_ratio = (torch.log(d_inputspace)/2)**2 - d_latentspace
+    log_dist_ratio = (torch.log(d_inputspace)/2)**2 - d_latentspace
 
-        if ratio is None:
-            max_ = torch.log(d_max_inputspace) - (factor*latentfactor)
-            if epoch == 0:
-                print("loss_grid_to_trajectory: Automatic ration calculated: " +str(max_.item())) #~7
-                print('max param space dist^2: ', torch.log(d_max_inputspace).item())
-        else:
-            max_ = torch.tensor(ratio).to(log_dist_ratio)
-
-        loss = nn.functional.mse_loss(log_dist_ratio, max_, reduction='sum') 
+    if ratio is None:
+        max_ = torch.log(d_max_inputspace) - (factor*latentfactor)
+        if epoch == 0:
+            print("loss_grid_to_trajectory: Automatic ration calculated: " +str(max_.item())) #~7
+            print('max param space dist^2: ', torch.log(d_max_inputspace).item())
     else:
-        raise "mode is undefined"
+        max_ = torch.tensor(ratio).to(log_dist_ratio)
+
+    loss = nn.functional.mse_loss(log_dist_ratio, max_, reduction='sum') 
 
     return loss
 

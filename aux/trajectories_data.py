@@ -28,16 +28,6 @@ def calculate_mean_std(file_paths, path):
     mean_flattened_vector = torch.cat(mean_values, dim=1).view(-1)
     std_flattened_vector = torch.cat(std_values, dim=1).view(-1)
 
-    print('mean and std: ', mean_flattened_vector, std_flattened_vector)
-
-    df = pd.DataFrame({'mean': mean_flattened_vector.tolist(), 'std': std_flattened_vector.tolist()})
-
-    # Transpose the dataframe to make sure a and b occupy a cell per entry
-    df = df.transpose()
-
-    # # Save the transposed dataframe to a CSV file
-    df.to_csv(os.path.join(path, 'mean_std_param_space.csv'), index=False)
-
     return mean_flattened_vector, std_flattened_vector
 
 class NormalizeModelParameters:
@@ -123,7 +113,7 @@ def print_summary(dataset, best_model, device, best_model_path_directory):
 
     df.to_csv(os.path.join(best_model_path_directory, 'summary.csv'), quoting=csv.QUOTE_NONNUMERIC, index=False)
 
-def get_anchor_dataloader(dataset, subset=None): #NOTE: change subset as you wish
+def get_anchor_dataloader(dataset, subset=None):
     if subset is None:
         subset= range(len(dataset))
     dataset2 = torch.utils.data.Subset(dataset, subset)

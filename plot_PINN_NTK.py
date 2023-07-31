@@ -3,17 +3,18 @@ import csv
 import json
 import pandas as pd
 import torch 
-from AEmodel import UniformAutoencoder
-from trajectories_data import get_trajectory_dataloader
-import sys
 import os
 import numpy as np
-from utils import get_density, get_files, repopulate_model
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib.colors import LogNorm, NoNorm
 
-from PINN_NTK_data_aux import get_errors, get_PINN
+from aux.AEmodel import UniformAutoencoder
+from aux.trajectories_data import get_trajectory_dataloader
+from aux.utils import get_density, get_files, repopulate_model
+from aux.PINN_NTK_data_aux import get_errors, get_PINN
+
+
 PINN_layers = [2, 500, 500, 500, 1]
 
 if __name__ == '__main__':
@@ -278,7 +279,7 @@ if __name__ == '__main__':
     density = density.reshape(list(xx.shape))
     CS = plt.contour(xx.detach().cpu().numpy(), yy.detach().cpu().numpy(), density,  levels=levels_density, vmin=density_vmin, vmax=density_vmax)
     fmt= ticker.FormatStrFormatter('%.2e')
-    sm = plt.cm.ScalarMappable( cmap = CS.cmap) #norm=norm,
+    sm = plt.cm.ScalarMappable( cmap = CS.cmap)
     sm.set_array([])
     sm.set_clim(vmin=density_vmin, vmax=density_vmax)  # set the limits to the contour levels
     cbar = plt.colorbar(sm)
@@ -324,7 +325,6 @@ if __name__ == '__main__':
             for i, idx in enumerate(args.key_models):
                 key_model_indx = int(idx)
                 key_modelname = args.key_modelnames[i]
-                # print(key_model_indx, key_modelname)
                 plt.scatter(trajectory_coordinates[:, 0][key_model_indx].detach().cpu().numpy(), trajectory_coordinates[:, 1][key_model_indx].detach().cpu().numpy(), c=c[0], marker='o', s=8, norm=norm, edgecolors='k', cmap=cmap, zorder=100, linewidths=2) 
 
                 if hasattr(args, 'key_modelnames') and args.key_modelnames is not None:
