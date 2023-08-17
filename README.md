@@ -1,11 +1,14 @@
-We will talk about stuff..
+# Neuro-Visualizer: An Auto-encoder-based Loss Landscape Visualization Method
 
-paper link: ____
-data link: ____
+## Important links:
 
-To run an experiment:
+- Input model data:
+- Trained Neuro-Visualizers and results: 
+- Other important auxiliary data:
 
-- git clone ...
-- extract data inside AE directory.
-- pip install requirements.txt
-- run the bash file in scripts
+## How to run an experiment
+
+- `git clone` this repo.
+- `pip install requirements.txt`
+- Extract the zip files above inside your repository.
+- `bash scripts\*.sh` for the experiment of interest.
