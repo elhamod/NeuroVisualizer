@@ -16,6 +16,6 @@ todelete/**
 SLURM/**
 AE/.code-workspace
 .vscode/**
-*.zip
+zips/**
 scripts_cluster/**
 scripts_arc/**

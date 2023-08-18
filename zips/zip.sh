@@ -1,4 +1,4 @@
-ver=1
+ver=2
 
 zip -r data_v$ver.zip ../data
 zip -r trajectories_v$ver.zip ../trajectories
