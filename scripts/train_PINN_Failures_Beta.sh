@@ -1,18 +1,5 @@
 #!/bin/bash
 
-#SBATCH --account=ml4science #imageomics-biosci  #mabrownlab   #ml4science
-#SBATCH --partition=dgx_normal_q
-#SBATCH --time=1-0:00:00 
-#SBATCH --gres=gpu:1
-#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=8
-#SBATCH -o ../SLURM/slurm-%j.out
-
-# setup
-module load Anaconda3/2020.11
-source activate landscapesvisenv
-
-
-
 train="yes" #"yes"
 wheretosave=PINN_Failures_Beta
 models_path=../trajectories/PINN_Failures/saved_models/Beta_L1

@@ -1,16 +1,5 @@
 #!/bin/bash
 
-#SBATCH --account=ml4science  #imageomics-biosci  #mabrownlab   #ml4science
-#SBATCH --partition=dgx_normal_q
-#SBATCH --time=0-4:00:00 
-#SBATCH --gres=gpu:1
-#SBATCH --nodes=1 --ntasks-per-node=1 --cpus-per-task=8
-#SBATCH -o ../SLURM/slurm-%j.out
-
-# setup
-module load Anaconda3/2020.11
-source activate landscapesvisenv
-
 train="yes" #"yes" "no"
 num_of_layers=3
 epochs=80000

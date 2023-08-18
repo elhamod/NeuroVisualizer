@@ -18,3 +18,4 @@ AE/.code-workspace
 .vscode/**
 *.zip
 scripts_cluster/**
+scripts_arc/**
