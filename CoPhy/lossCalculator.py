@@ -1,8 +1,10 @@
-from model_params import Loss as modelparamsLoss, wrap_model
+# Code is copied with necessary refactoring from https://github.com/jayroxis/Cophy-PGNN 
+
+from CoPhy.model_params import Loss as modelparamsLoss, wrap_model
 import torch
 import math
-import presets
-from data_loader import DatasetLoader
+from CoPhy.presets import getPresets
+from CoPhy.data_loader import DatasetLoader
 
 def inverse_norm(batch, scale, mean):
     return batch * scale + mean
@@ -117,7 +119,7 @@ def loss_func(data, loss_list, outputs, e_coff=0.0, s_coff=1.0, batchX=None, bat
 norms = {}
 DNN_types=["NN", "PGNN_OnlyDTr", "PGNN_LF", "PGNN_"]
 for DNN_type in DNN_types:
-    (train_loss_list, test_loss_list, norm) = presets.getPresets(DNN_type)
+    (train_loss_list, test_loss_list, norm) = getPresets(DNN_type)
     norms[DNN_type] = norm
 
 class PhyLoss(modelparamsLoss):

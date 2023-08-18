@@ -1,3 +1,5 @@
+# Code is copied with necessary refactoring from https://github.com/arkadaw9/r3_sampling_icml2023
+
 import torch
 from torch import nn
 from collections import OrderedDict
@@ -5,8 +7,6 @@ from collections import OrderedDict
 class DNN(torch.nn.Module):
     def __init__(self, layers, activation, use_batch_norm=False, use_instance_norm=False, init="default"):
         super(DNN, self).__init__()
-        
-        # print(f"Initializing a default MLP with layers: {layers}")
         
         # parameters
         self.depth = len(layers) - 1

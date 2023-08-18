@@ -12,7 +12,7 @@ module load Anaconda3/2020.11
 source activate landscapesvisenv
 
 train="yes" #"yes" "no"
-models_path=../trajectories/MTL_same_initialization/Beta30/CW
+models_path=../trajectories/LoadBalancing_same_initialization/Beta30/CW
 wheretosave=Convection_anchor1
 num_of_layers=3
 epochs=80000

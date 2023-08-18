@@ -17,3 +17,4 @@ SLURM/**
 AE/.code-workspace
 .vscode/**
 *.zip
+scripts_cluster/**

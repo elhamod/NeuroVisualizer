@@ -12,9 +12,9 @@ warnings.filterwarnings("ignore", message="The frame.append method is deprecated
 
 from aux.AEmodel import UniformAutoencoder
 from aux.earlystopping import EarlyStopping
-from aux.losses import loss_consecutive_coordinates, loss_grid_to_trajectory, rec_loss_function, loss_anchor
+from aux.losses import loss_grid_to_trajectory, rec_loss_function, loss_anchor
 from aux.trajectories_data import get_trajectory_dataloader, get_anchor_dataloader, get_predefined_values
-from aux.utils import get_files, get_gridpoint_and_trajectory_datasets, loss_well_spaced_trajectory, plot_losses
+from aux.utils import get_files, get_gridpoint_and_trajectory_datasets, plot_losses
 
 
 
@@ -47,8 +47,7 @@ if __name__ == '__main__':
 
     #grid
     parser.add_argument('--grid_step', default=0.1, type=float, help='grid step for grids loss')
-    parser.add_argument('--grid_ratio', default=None, type=float, help='grid rati of input to latent')
-    parser.add_argument('--latentfactor', default=2, type=float, help='latentfactor') 
+    parser.add_argument('--d_max_latent', default=2, type=float, help='d_max_latent') 
     parser.add_argument('--anchor_mode', default="diagonal", type=str, help='anchor shape') #"circle"#"diagonal"
 
     #weigths
@@ -56,7 +55,6 @@ if __name__ == '__main__':
     parser.add_argument('--anchor_weight', default=0.0, type=float)
     parser.add_argument('--lastzero_weight', default=0.0, type=float)
     parser.add_argument('--polars_weight', default=0.0, type=float)
-    parser.add_argument('--equidistant_weight', default=0.0, type=float)
     parser.add_argument('--gridscaling_weight', default=0.0, type=float)
 
     parser.add_argument('--resume', dest='resume', action='store_true')
@@ -101,10 +99,6 @@ if __name__ == '__main__':
             'weight': args.gridscaling_weight,
             'official_name': "Grid-scaling loss"
         },
-        'equidistant': {
-            'weight': args.equidistant_weight,
-            'official_name': "Equi-distant loss"
-        },
     }
     isEnabled = lambda loss: loss_dict[loss]['weight'] > 0
 
@@ -129,7 +123,7 @@ if __name__ == '__main__':
     # get files
     pt_files = get_files(file_path, args.num_models, prefix=args.prefix, from_last=args.from_last, every_nth=args.every_nth)
 
-    range_of_files_for_anchor = range(len(pt_files))#range(31-9, 31)#range(9)#range(32-10, 32-1) #range(9)#range(32)
+    range_of_files_for_anchor = range(len(pt_files))
 
 
     rec_data_loader, transform = get_trajectory_dataloader(pt_files, args.batch_size, best_model_path_directory)
@@ -149,17 +143,13 @@ if __name__ == '__main__':
         loss_dict['lastzero']['dataloader'] =  get_anchor_dataloader(dataset)
     if isEnabled('polars'):
         loss_dict['polars']['dataloader'] =  get_anchor_dataloader(dataset)
-    if isEnabled('equidistant'):
-        loss_dict['equidistant']['dataloader'] =  get_trajectory_dataloader(pt_files, len(pt_files), best_model_path_directory, shuffle=False)
-    d_max_inputspace=None
+    l_max_inputspace=None
     if isEnabled('gridscaling'):
         loss_dict['gridscaling']['dataloader'] = get_gridpoint_and_trajectory_datasets(pt_files, best_model_path_directory, args.grid_step, batch_size=args.batch_size)
         data_trajectory_dataset_temp = loss_dict['gridscaling']['dataloader'].dataset
         data_trajectory_dataset_temp_0 = data_trajectory_dataset_temp[0][1]
         data_trajectory_dataset_temp_last = data_trajectory_dataset_temp[-1][1]
-        d_max_inputspace = torch.sqrt((data_trajectory_dataset_temp_0 - data_trajectory_dataset_temp_last).pow(2).sum(dim=-1)).to(device)
-
-    ###### CODE
+        l_max_inputspace = torch.sqrt((data_trajectory_dataset_temp_0 - data_trajectory_dataset_temp_last).pow(2).sum(dim=-1)).to(device)
 
 
     model = UniformAutoencoder(input_dim, args.num_of_layers, latent_dim, h=args.layers_AE).to(device)
@@ -167,8 +157,6 @@ if __name__ == '__main__':
     scheduler = CosineAnnealingWarmRestarts(optimizer, args.cosine_Scheduler_patience)
 
     #### Training
-
-    # Training
 
     
 
@@ -217,7 +205,6 @@ if __name__ == '__main__':
     df_losses = pd.DataFrame(columns=columns)
     
     for epoch in range(args.epochs):
-        # print('ho', epoch)
         if earlystopping.stop_training == False:
             model.train()
             total_losses = {}
@@ -261,17 +248,13 @@ if __name__ == '__main__':
                     loss_zero = torch.nn.functional.mse_loss(10*last_coordinate, 10*0.8*torch.ones_like(last_coordinate))
                     loss_zero2 = torch.nn.functional.mse_loss(10*first_coordinate, 10*-0.8*torch.ones_like(first_coordinate))
                     losses['polars'] = loss_zero + loss_zero2
-
-                if isEnabled('equidistant'):
-                    x_recon, z = model(data['equidistant'].to(device))
-                    losses['equidistant'] = loss_consecutive_coordinates(z)
                 
                 if isEnabled('gridscaling'):
                     data_grid_latent, data_trajectory = data['gridscaling']
                     data_grid_latent = data_grid_latent[0] # because of TesnorDataset
                     data_grid_latent = data_grid_latent.to(device)
                     data_trajectory = data_trajectory.to(device)
-                    losses['gridscaling'] = loss_grid_to_trajectory(model, data_grid_latent, data_trajectory, d_max_inputspace, args.grid_ratio, epoch=epoch, latentfactor=args.latentfactor)
+                    losses['gridscaling'] = loss_grid_to_trajectory(model, data_grid_latent, data_trajectory, l_max_inputspace, epoch=epoch, d_max_latent=args.d_max_latent)
 
                 loss_total_batch = 0
                 for i in losses:

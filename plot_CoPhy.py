@@ -30,7 +30,6 @@ if __name__ == '__main__':
 
     #All
     parser.add_argument('--whichloss', default=None, type=str, help='whichloss to plot')
-    # parser.add_argument('--task_name', required=True, nargs='+', help='List of all task_names')
 
     #AE archi
     parser.add_argument('--num_of_layers', type=int, default=3)
@@ -89,7 +88,7 @@ if __name__ == '__main__':
     with open(os.path.join(best_model_path_directory, 'plotting_args.json'), 'w') as f:
         f.write(json_str)
 
-    ####!Cophy stuff
+    ####!CoPhy stuff
     ####Loss
     loss_obj = Loss(args.DNN_type, args.dataPath, args.n_spins, args.trainingCount, args.validation_count, device)
     D_in  = loss_obj.datasetLoader.x_dim
@@ -293,6 +292,8 @@ if __name__ == '__main__':
     CS = plt.contour(xx.detach().cpu().numpy(), yy.detach().cpu().numpy(), density, norm =norm, levels=levels_density)
     plt.xlabel('x')
     plt.ylabel('y')
+    plt.xlim(min_x, max_x)
+    plt.ylim(min_y, max_y)
     k= matplotlib.colors.Normalize(vmin=CS.cvalues.min(), vmax=CS.cvalues.max())
     sm = plt.cm.ScalarMappable(norm=norm, cmap = CS.cmap)
     sm.set_array([])
@@ -308,8 +309,6 @@ if __name__ == '__main__':
         fig = plt.figure()
 
         ax = plt.gca()
-        ax.set_xlim([min_x, max_x])
-        ax.set_ylim([min_y, max_y])
 
         norm=LogNorm()
 
@@ -334,7 +333,7 @@ if __name__ == '__main__':
         else:
             raise "Unknown polt type"
 
-        scatter = plt.scatter(trajectory_coordinates[:, 0].detach().cpu().numpy(), trajectory_coordinates[:, 1].detach().cpu().numpy(), c=c, marker='o', s=8, norm=norm, cmap=cmap, zorder=100)
+        scatter = ax.scatter(trajectory_coordinates[:, 0].detach().cpu().numpy(), trajectory_coordinates[:, 1].detach().cpu().numpy(), c=c, marker='o', s=8, norm=norm, cmap=cmap, zorder=100)
         
 
 
@@ -349,7 +348,7 @@ if __name__ == '__main__':
                         last_key_model_indx = trajectory_coordinates.shape[0]-1
                     else:
                         last_key_model_indx = int(args.key_models[i+1])-1
-                    plt.text(trajectory_coordinates[:, 0][last_key_model_indx].detach().cpu().numpy(), trajectory_coordinates[:, 1][last_key_model_indx].detach().cpu().numpy(), key_modelname, ha='left', va='top', zorder=101, fontsize=9,backgroundcolor=(1.0, 1.0, 1.0, 0.5))
+                    plt.text(trajectory_coordinates[:, 0][last_key_model_indx].detach().cpu().numpy(), trajectory_coordinates[:, 1][last_key_model_indx].detach().cpu().numpy(), key_modelname, ha='left', va='top', zorder=101, fontsize=9,backgroundcolor=(1.0, 1.0, 1.0, 0.5), clip_on=True)
 
         
 
@@ -377,6 +376,9 @@ if __name__ == '__main__':
 
         cbar = plt.colorbar(scatter, shrink=0.6)
         cbar.ax.set_ylabel( name_map[plot_]  )
+        
+        ax.set_xlim([min_x, max_x])
+        ax.set_ylim([min_y, max_y])
 
         fig.savefig(os.path.join(best_model_path_directory, 'map_'+loss_type+'_'+args.loss_name+'_'+plot_+'.pdf'), dpi=300, bbox_inches='tight', format='pdf')
 

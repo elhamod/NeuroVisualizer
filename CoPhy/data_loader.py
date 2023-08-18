@@ -1,3 +1,4 @@
+# Code is copied with necessary refactoring from https://github.com/jayroxis/Cophy-PGNN 
 
 import torch
 import numpy as np

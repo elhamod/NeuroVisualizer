@@ -3,7 +3,7 @@
 ## Important links:
 
 - Input model data:
-- Trained Neuro-Visualizers and results: 
+- Trained Neuro-Visualizers and results:
 - Other important auxiliary data:
 
 ## How to run an experiment
@@ -12,3 +12,8 @@
 - `pip install requirements.txt`
 - Extract the zip files above inside your repository.
 - `bash scripts\*.sh` for the experiment of interest.
+
+### TODO:
+
+- [ ] update zip files and add the links to this file
+- [ ] clean up code

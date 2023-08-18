@@ -15,12 +15,12 @@ train="yes" #"yes" "no"
 num_of_layers=3
 epochs=80000
 wheretosave=Convection_anchor2_grid_L2
-models_path=../trajectories/MTL_same_initialization/Beta30/CW
+models_path=../trajectories/LoadBalancing_same_initialization/Beta30/CW
 
 
 
 #training
-weights="--lastzero_weight 100 --gridscaling_weight 1.0 --latentfactor 2.0 --grid_step 0.2"
+weights="--lastzero_weight 100 --gridscaling_weight 1.0 --d_max_latent 2.0 --grid_step 0.2"
 beta=30.0
 everynth="--every_nth 1"
 

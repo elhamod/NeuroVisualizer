@@ -12,9 +12,9 @@ warnings.filterwarnings("ignore", message="The frame.append method is deprecated
 
 from aux.AEmodel import UniformAutoencoder
 from aux.earlystopping import EarlyStopping
-from aux.losses import loss_consecutive_coordinates, loss_grid_to_trajectory, rec_loss_function, loss_anchor
+from aux.losses import loss_grid_to_trajectory, rec_loss_function, loss_anchor
 from aux.trajectories_data import get_trajectory_dataloader, get_anchor_dataloader, get_predefined_values
-from aux.utils import get_files, get_gridpoint_and_trajectory_datasets, loss_well_spaced_trajectory, plot_losses
+from aux.utils import get_files, get_gridpoint_and_trajectory_datasets, plot_losses
 
 
 
@@ -41,17 +41,14 @@ if __name__ == '__main__':
 
     #grid
     parser.add_argument('--grid_step', default=0.1, type=float, help='grid step for grids loss')
-    parser.add_argument('--grid_ratio', default=None, type=float, help='grid rati of input to latent') 
     parser.add_argument('--anchor_mode', default="diagonal", type=str, help='anchor shape') #"circle"#"diagonal"
-    parser.add_argument('--latentfactor', default=2, type=float, help='latentfactor') #"proportional"#"scaled"
+    parser.add_argument('--d_max_latent', default=2, type=float, help='d_max_latent') #"proportional"#"scaled"
 
     #weigths
     parser.add_argument('--rec_weight', default=1.0, type=float)
     parser.add_argument('--anchor_weight', default=0.0, type=float)
     parser.add_argument('--lastzero_weight', default=0.0, type=float)
-    parser.add_argument('--equidistant_weight', default=0.0, type=float)
     parser.add_argument('--gridscaling_weight', default=0.0, type=float)
-    parser.add_argument('--equidistant_weight', default=0.0, type=float)
 
     latent_dim = 2
 
@@ -79,10 +76,6 @@ if __name__ == '__main__':
         'gridscaling': {
             'weight': args.gridscaling_weight,
             'official_name': "Grid-scaling loss"
-        },
-        'equidistant': {
-            'weight': args.equidistant_weight,
-            'official_name': "Equi-distant loss"
         },
     }
     isEnabled = lambda loss: loss_dict[loss]['weight'] > 0
@@ -125,16 +118,13 @@ if __name__ == '__main__':
     if isEnabled('lastzero'):
         loss_dict['lastzero']['dataloader'] =  get_anchor_dataloader(dataset)
     
-    if isEnabled('equidistant'):
-        loss_dict['equidistant']['dataloader'] =  get_trajectory_dataloader(pt_files, len(pt_files), best_model_path_directory, shuffle=False)
-
-    d_max_inputspace=None
+    l_max_inputspace=None
     if isEnabled('gridscaling'):
         loss_dict['gridscaling']['dataloader'] = get_gridpoint_and_trajectory_datasets(pt_files, best_model_path_directory, args.grid_step, batch_size=args.batch_size)
         data_trajectory_dataset_temp = loss_dict['gridscaling']['dataloader'].dataset
         data_trajectory_dataset_temp_0 = data_trajectory_dataset_temp[0][1]
         data_trajectory_dataset_temp_last = data_trajectory_dataset_temp[-1][1]
-        d_max_inputspace = torch.sqrt((data_trajectory_dataset_temp_0 - data_trajectory_dataset_temp_last).pow(2).sum(dim=-1)).to(device)
+        l_max_inputspace = torch.sqrt((data_trajectory_dataset_temp_0 - data_trajectory_dataset_temp_last).pow(2).sum(dim=-1)).to(device)
 
     model = UniformAutoencoder(input_dim, args.num_of_layers, latent_dim).to(device)
     print('model', model)
@@ -208,10 +198,6 @@ if __name__ == '__main__':
                         last_coordinate = z[-1, :]
                         loss_zero = torch.nn.functional.mse_loss(last_coordinate, torch.zeros_like(last_coordinate))
                         losses['lastzero'] = loss_zero
-                    
-                    if isEnabled('equidistant'):
-                        x_recon, z = model(data['equidistant'].to(device))
-                        losses['equidistant'] = loss_consecutive_coordinates(z)
 
                     if isEnabled('gridscaling'):
                         data_grid_latent, data_trajectory = data['gridscaling']
@@ -219,7 +205,7 @@ if __name__ == '__main__':
                         data_grid_latent = data_grid_latent.to(device)
                         data_trajectory = data_trajectory.to(device)
 
-                        losses['gridscaling'] = loss_grid_to_trajectory(model, data_grid_latent, data_trajectory, d_max_inputspace, args.grid_ratio, epoch=epoch, latentfactor=args.latentfactor)
+                        losses['gridscaling'] = loss_grid_to_trajectory(model, data_grid_latent, data_trajectory, l_max_inputspace, epoch=epoch, d_max_latent=args.d_max_latent)
                     
                     loss_total_batch = 0
                     for i in losses:

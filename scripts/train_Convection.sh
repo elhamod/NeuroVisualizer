@@ -16,7 +16,7 @@ source activate landscapesvisenv
 train="yes" #"yes" "no"
 num_of_layers=3
 epochs=80000
-models_path=../trajectories/MTL_same_initialization/Beta30/CW
+models_path=../trajectories/LoadBalancing_same_initialization/Beta30/CW
 wheretosave=Convection
 
 

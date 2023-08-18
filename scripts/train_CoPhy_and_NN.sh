@@ -26,10 +26,10 @@ wheretosave=CoPhy_and_NN_every$everynth
 #training
 weights=""
 everynth=1
-resume= #"--resume" #TODO: remove resume?
+resume= #"--resume" 
 
 if [ "$train" == "yes" ]; then
-    python train_CoPhy.py --model_file ../saved_models/$wheretosave/model.pt --model_folder $modelPath $weights $prefix --every_nth $everynth $resume
+    python ../train_CoPhy.py --model_file ../saved_models/$wheretosave/model.pt --model_folder $modelPath $weights $prefix --every_nth $everynth $resume
 fi
 
 

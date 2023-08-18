@@ -24,7 +24,7 @@ models_path=../trajectories/PINN_Failures/saved_models/Beta_L1
 weights="--rec_weight 1.0 --wellspacedtrajectory_weight 1.0"
 num_of_layers=
 learning_rate="--learning_rate 5e-4"
-epochs="--epochs 200000" #"
+epochs="--epochs 600000"
 patience_scheduler="--patience_scheduler 5000"
 cosine="--cosine_Scheduler_patience 2000"
 resume= #"--resume"
@@ -53,7 +53,7 @@ do
         everynth="--every_nth 10"
 
         if [ "$train" == "yes" ]; then
-            python train_PINN_Failures.py --model_file ../saved_models/$wheretosave/beta$beta\_L$L/model.pt --model_folder $models_path/beta$beta\_L$L $weights $everynth $num_of_layers $learning_rate $resume $epochs $patience_scheduler $cosine
+            python ../train_PINN_Failures.py --model_file ../saved_models/$wheretosave/beta$beta\_L$L/model.pt --model_folder $models_path/beta$beta\_L$L $weights $everynth $num_of_layers $learning_rate $resume $epochs $patience_scheduler $cosine
         fi
 
         everynth="--every_nth 1"

@@ -1,3 +1,4 @@
+# Code is copied with necessary refactoring from https://github.com/marcellodebernardi/loss-landscapes 
 
 from abc import ABC, abstractmethod
 import abc
@@ -106,8 +107,6 @@ class ModelParameters:
         :return: none
         """
         for idx in range(len(self)):
-            # print('vector[idx]', vector[idx].cuda())
-            # print('self.parameters[idx]', self.parameters[idx])
             self.parameters[idx] -= vector[idx]#.cuda()
 
     def __mul__(self, scalar) -> 'ModelParameters':

@@ -1,3 +1,5 @@
+# Code is copied with necessary refactoring from https://github.com/a1k12/characterizing-pinns-failure-modes
+
 import numpy as np
 import random
 import torch

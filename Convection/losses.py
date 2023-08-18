@@ -1,3 +1,5 @@
+# Code is copied with necessary refactoring from https://github.com/arkadaw9/r3_sampling_icml2023
+
 import torch
 import numpy as np
 
@@ -264,8 +266,6 @@ class Loss:
         u_pred = u_pred.T
 
         error = np.linalg.norm(u_pred - self.usol) / np.linalg.norm(self.usol) 
-        # print('Relative l2 error: {:.3e}'.format(error))
-        # return error, u_pred
         return torch.tensor(error).to(self.device)
     
     

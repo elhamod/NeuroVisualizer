@@ -1,10 +1,7 @@
 #### DATA ########
 from torch.utils.data import DataLoader, Dataset
 import torch
-import os
-import csv
 import numpy as np
-import pandas as pd
 
 def calculate_mean_std(file_paths, path):
     state_dicts = [torch.load(file_path, map_location=torch.device('cpu')) for file_path in file_paths]
@@ -77,41 +74,6 @@ def get_trajectory_dataloader(pt_files, batch_size, path, normalize=True, shuffl
     return data_loader, normalizer
 
 
-
-def print_summary(dataset, best_model, device, best_model_path_directory):
-    best_model.eval()
-    df = pd.DataFrame(columns=['index', 'file', 'x', 'y', 'distance'])
-
-    with torch.no_grad():
-        for batch_idx, data in enumerate(dataset):
-            data = data.to(device)
-
-            x_recon, z = best_model(data.view(1, -1))
-            z = z.view(-1)
-
-            m = batch_idx
-
-            transform = dataset.transform
-            data_unnormalized = data*transform.std.to(device) + transform.mean.to(device)
-            x_recon_unnormalized = x_recon*transform.std.to(device) + transform.mean.to(device)
-
-            d = (data_unnormalized - x_recon_unnormalized).pow(2).sum().sqrt()
-            z_tuple = ', '.join(['{:.2f}'.format(num) for num in tuple(z.tolist())])
-
-            print('model {}\t file {}\t coordinates ({})\t Distance in param space = {:.2f}'.format(m, os.path.basename(dataset.file_paths[m]), z_tuple, d.item()))
-
-            row = {
-                'index': m, 
-                'file': os.path.basename(dataset.file_paths[m]), 
-                'x': z[0].detach().cpu().numpy(), 
-                'y': z[1].detach().cpu().numpy(), 
-                'dists_param_space': d.item(),
-                'loss': d.item(),
-                'relative_error': d.item()}
-            
-            df = df.append(row, ignore_index=True)
-
-    df.to_csv(os.path.join(best_model_path_directory, 'summary.csv'), quoting=csv.QUOTE_NONNUMERIC, index=False)
 
 def get_anchor_dataloader(dataset, subset=None):
     if subset is None:

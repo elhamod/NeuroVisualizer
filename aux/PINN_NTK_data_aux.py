@@ -1,3 +1,5 @@
+# Code is copied with necessary refactoring from https://github.com/PredictiveIntelligenceLab/PINNsNTK 
+
 import numpy as np
 import torch
 
@@ -55,19 +57,13 @@ class Sampler:
         y = self.func(x)
         return x, y
 
+
+
 res_sampler = Sampler(2, dom_coords, lambda x: r(x, a, c), name='Forcing')
 X, _ = res_sampler.sample(np.int32(1e5))
 mu_X, sigma_X = X.mean(0), X.std(0)
 mu_t, sigma_t = mu_X[0], sigma_X[0]
 mu_x, sigma_x = mu_X[1], sigma_X[1]
-
-
-
-
-
-
-
-
 
 def net_u_t(model, t, x):
     # Ensure t is a tensor with gradient tracking
@@ -81,7 +77,6 @@ def net_u_t(model, t, x):
     t = t.requires_grad_(True)
 
     u = net_u(model, t, x)
-    # print(t, 'hi')
 
     # Compute du/dt
     u_t = torch.autograd.grad(u, t, grad_outputs=torch.ones_like(u), create_graph=True)[0] / sigma_t
@@ -102,18 +97,9 @@ def net_u(model, t_u, x_u):
     input_tensor = torch.cat((t_u, x_u), dim=1)
 
     u = model(input_tensor.float())
-    # print(u, 'hi')
     return u
 
 
-# def operator(u, t, x, c, sigma_t=1.0, sigma_x=1.0):
-#     u_t = tf.gradients(u, t)[0] / sigma_t
-#     u_x = tf.gradients(u, x)[0] / sigma_x
-#     u_tt = tf.gradients(u_t, t)[0] / sigma_t
-#     u_xx = tf.gradients(u_x, x)[0] / sigma_x
-#     residual = u_tt - c**2 * u_xx
-#     return residual
-import torch
 
 def operator(u, t, x, c, sigma_t=1.0, sigma_x=1.0):
     # u = u.clone().requires_grad_(True)
@@ -238,11 +224,9 @@ def get_errors(model, type="u"):
         return error_bcs
     elif type=="r":
         r_pred = predict_r(X_star, model)
-        # print('r', R_star, r_pred)
         error_r = np.linalg.norm(R_star - r_pred, 2) / (np.linalg.norm(R_star, 2) + np.finfo(np.float32).eps)
         return torch.from_numpy(np.array([error_r])).to(model[0].weight.device)
     else: ##u
         u_pred = predict_u(X_star, model)
-        # print('u', R_star, r_pred)
         error_u = np.linalg.norm(u_star - u_pred, 2) / (np.linalg.norm(u_star, 2) + np.finfo(np.float32).eps)
         return torch.from_numpy(np.array([error_u])).to(model[0].weight.device)

@@ -1,3 +1,5 @@
+# Code for early stopping is copied from https://github.com/lululxvi/deepxde/blob/master/deepxde/callbacks.py 
+
 import os
 import numpy as np
 import torch
