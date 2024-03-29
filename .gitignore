@@ -20,3 +20,4 @@ zips/**
 scripts_cluster/**
 scripts_arc/**
 models_notnecessary/**
+scripts/data
