@@ -2,7 +2,7 @@
 *.out
 *.h5
 *.csv
-*.pdf
+# *.pdf
 *.dat
 *.pyc
 *.png

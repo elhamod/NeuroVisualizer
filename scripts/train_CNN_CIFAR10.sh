@@ -16,7 +16,7 @@ weights="--anchor_weight 100 --gridscaling_weight 1.0 --d_max_latent 0.7 --grid_
 resume= #"--resume" 
 
 if [ "$train" == "yes" ]; then
-    python ../train_CNN_MLP.py --model_file ../saved_models/$wheretosave/model.pt --model_folder $modelPath $weights $prefix --every_nth $everynth $resume
+    python ../CNN_MLP/train_CNN_MLP.py --model_file ../saved_models/$wheretosave/model.pt --model_folder $modelPath $weights $prefix --every_nth $everynth $resume
 fi
 
 
@@ -36,7 +36,7 @@ for whichloss in "${whichlosses[@]}"
 do
     for loss_name in "${loss_names[@]}"
     do
-        python ../plot_CNN_MLP.py --model_file ../saved_models/$wheretosave/model.pt --dataset_name $dataset_name --model_name $model_name --model_folder $modelPath --vlevel $vlevel --vmin $vmin --vmax $vmax --x=$x --whichloss $whichloss --loss_name $loss_name --every_nth $everynth $prefix --key_models $key_models --key_modelnames $key_modelnames
+        python ../CNN_MLP/plot_CNN_MLP.py --model_file ../saved_models/$wheretosave/model.pt --dataset_name $dataset_name --model_name $model_name --model_folder $modelPath --vlevel $vlevel --vmin $vmin --vmax $vmax --x=$x --whichloss $whichloss --loss_name $loss_name --every_nth $everynth $prefix --key_models $key_models --key_modelnames $key_modelnames
     done
 done
 
