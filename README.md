@@ -1,9 +1,3 @@
----
-runme:
-  id: 01HT4B3Y30Z78Y9THYSMNZS8M9
-  version: v3
----
-
 # Neuro-Visualizer: An Auto-encoder-based Loss Landscape Visualization Method
 
 ## Important links:
