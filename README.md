@@ -14,7 +14,3 @@
 - `pip install requirements.txt`
 - Extract the zip files above inside your repository.
 - `cd scripts` and then `bash scripts\*.sh` for the experiment of interest.
-
-Need to:
-
-- update data package
